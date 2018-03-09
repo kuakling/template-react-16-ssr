@@ -19,14 +19,14 @@ get the features you need. You might as well just use them as a resource to lear
 the specific technologies are implemented.
 
 ### Master
-Merge branches: 
+- Merge branches: 
   - React-Router
   - Redux
-Add:
+- Add:
   - React-Apollo
   - React-Helmet
   - Dotenv
-Modify:
+- Modify:
   - Upgrade dependencies (without webpack and webpack-dev-middleware)
   - ES6 for all .js
   - Global style
