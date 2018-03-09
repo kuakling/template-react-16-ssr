@@ -1,6 +1,16 @@
 import React, { Component } from 'react';
+import { Switch, Route } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
-import './app.styl';
+import './style.global.styl';
+
+import Home from './components/Home';
+import About from './components/About';
+import Todos from './components/Todos';
+import Films from './components/Films';
+import NotFound from './components/NotFound';
+
+import Nav from './components/blocks/Nav';
 
 /**
  * The `App` component is the entry point for the react app.
@@ -10,10 +20,24 @@ import './app.styl';
  */
 export default class App extends Component {
 
-    render() {
-        return (
-            <h1>Welcome to React Fiber.</h1>
-        );
-    }
+  render() {
+    return (
+      <div>
+        <Helmet
+          titleTemplate="%s | React 16 SSR "
+          defaultTitle="My Default Title"
+        />
+        
+        <Nav />
+        <Switch>
+          <Route exact path='/' component={Home} />
+          <Route path='/about' component={About} />
+          <Route path='/todos' component={Todos} />
+          <Route path='/films' component={Films} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+    );
+  }
 
 }

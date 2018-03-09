@@ -1,10 +1,10 @@
-const nodeExternals = require('./node-externals');
+import nodeExternals from './node-externals';
 const projectExternals = {
-    './assets/stats.json': 'commonjs ./assets/stats.json',
-    './assets/app.server.js': 'commonjs ./assets/app.server.js'
+  './assets/stats.json': 'commonjs ./assets/stats.json',
+  './assets/app.server.js': 'commonjs ./assets/app.server.js'
 };
 
-module.exports = {
+export default {
     ...nodeExternals,
     ...projectExternals
 };

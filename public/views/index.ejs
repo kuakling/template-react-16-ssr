@@ -1,19 +1,25 @@
-<html>
+<!DOCTYPE html>
+<html <%- helmet.htmlAttributes.toString() %>>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <%if (process.env.REACT_APP_BASE_URL) { %><base href="/<%- process.env.REACT_APP_BASE_URL %>"><% } %>
+  
+  <%- styles %>
 
-    <%- styles %>
-
-    <title>React 16 | Sample</title>
+  <%- helmet.title.toString() %>
+  <%- helmet.meta.toString() %>
+  <%- helmet.link.toString() %>
 </head>
-<body>
+<body <%- helmet.bodyAttributes.toString() %>>
 
 <div id="react-root"><%- appString %></div>
 
 <%- cssHash %>
+<script>
+  window.__PRELOADED_STATE__ = <%- preloadedState %>
+</script>
 <%- js %>
 
 </body>

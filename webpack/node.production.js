@@ -1,29 +1,28 @@
-const merge = require('webpack-merge');
-const webpack = require('webpack');
-const common = require('./common');
-const join = require('path').join;
-const extendedNodeExternals = require('../scripts/extended-node-externals');
+import merge from 'webpack-merge';
+import webpack from 'webpack';
+import common from './common';
+import { join } from 'path';
+import extendedNodeExternals from '../scripts/extended-node-externals';
+import env from './env';
 
-module.exports = merge(common, {
-    target: 'node',
-    externals: extendedNodeExternals,
-    node: {
-        __dirname: false,
-        __filename: false
-    },
-    entry: [
-        'babel-polyfill',
-        join(__dirname, '../src/index')
-    ],
-    output: {
-        filename: 'index.js',
-        path: join(__dirname, '../public'),
-    },
-    plugins: [
-        new webpack.DefinePlugin({
-            'process.env': {
-                'NODE_ENV': JSON.stringify('production')
-            }
-        })
-    ]
+export default merge(common, {
+  target: 'node',
+  externals: extendedNodeExternals,
+  node: {
+    __dirname: false,
+    __filename: false
+  },
+  entry: [
+    'babel-polyfill',
+    join(__dirname, '../src/index')
+  ],
+  output: {
+    filename: 'index.js',
+    path: join(__dirname, '../public'),
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      ...env()
+    })
+  ]
 });

@@ -1,45 +1,56 @@
-const merge = require('webpack-merge');
-const webpack = require('webpack');
-const common = require('./common');
-const join = require('path').join;
-const nodeExternals = require('../scripts/node-externals');
+import merge from 'webpack-merge';
+import webpack from 'webpack';
+import common from './common';
+import { join } from 'path';
+import nodeExternals from '../scripts/node-externals';
+import env from './env';
 
-module.exports = merge(common, {
-    name: 'server',
-    target: 'node',
-    externals: nodeExternals,
-    entry: [
-        'babel-polyfill',
-        join(__dirname, '../src/server/index')
-    ],
-    devtool: 'inline-source-map',
-    output: {
-        filename: 'app.server.js',
-        libraryTarget: 'commonjs2'
+export default merge(common, {
+  name: 'server',
+  target: 'node',
+  externals: nodeExternals,
+  entry: [
+    'babel-polyfill',
+    join(__dirname, '../src/server/index')
+  ],
+  devtool: 'inline-source-map',
+  output: {
+    filename: 'app.server.js',
+    libraryTarget: 'commonjs2'
+  },
+  module: {
+    rules: [{
+      test: /\.(styl|css)/,
+      exclude: [/style.global/, /node_modules/],
+      use: [{
+        loader: 'css-loader/locals',
+        options: {
+          modules: true,
+          localIdentName: '[name]__[local]--[hash:base64:5]'
+        }
+      }, {
+        loader: 'stylus-loader'
+      }]
     },
-    module: {
-        rules: [{
-            test: /\.styl/,
-            exclude: /node_modules/,
-            use: [{
-                loader: 'css-loader/locals',
-                options: {
-                    modules: true,
-                    localIdentName: '[name]__[local]--[hash:base64:5]'
-                }
-            }, {
-                loader: 'stylus-loader'
-            }]
-        }]
-    },
-    plugins: [
-        new webpack.DefinePlugin({
-            'process.env': {
-                'NODE_ENV': JSON.stringify('production')
-            }
-        }),
-        new webpack.optimize.LimitChunkCountPlugin({
-            maxChunks: 1
-        })
-    ]
+    {
+      test: /\global\.styl/,
+      use: [{
+        loader: 'css-loader/locals',
+        options: {
+          localIdentName: '[local]'
+        }
+      }, {
+        loader: 'stylus-loader'
+      }]
+    }]
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      SERVER: true,
+      ...env()
+    }),
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1
+    })
+  ]
 });

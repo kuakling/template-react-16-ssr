@@ -1,6 +1,9 @@
 # IntelliJ
 .idea
 
+# Environment file
+.env
+
 # NodeJS
 node_modules
 
@@ -8,3 +11,5 @@ node_modules
 public/**.json
 public/assets
 public/index.js
+
+yarn-error.log

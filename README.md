@@ -18,6 +18,24 @@ Either checkout a specific branch or fork the repository and merge the branches 
 get the features you need. You might as well just use them as a resource to learn, how
 the specific technologies are implemented.
 
+### Master
+Merge branches: 
+  - React-Router
+  - Redux
+Add:
+  - React-Apollo
+  - React-Helmet
+  - Dotenv
+Modify:
+  - Upgrade dependencies (without webpack and webpack-dev-middleware)
+  - ES6 for all .js
+  - Global style
+  - Can run on subfolder url
+  - Deploy on docker
+
+### Base (feature/base)
+From master's brance of foke [rherwig/template-react-16-ssr](https://github.com/rherwig/template-react-16-ssr)
+
 ### Streaming (feature/streaming)
 Since React 16, we have the possibility to render to a node stream. This improves the time to first byte (TTBF), 
 since the browser can display the app in an iterative manner. The dedicated branch provides the basic streaming 
@@ -42,10 +60,10 @@ from the server as well as state hydration on the client.
 To start development, follow these steps:
 
 ```
-$ git clone https://github.com/rherwig/template-react-16-ssr.git
+$ git clone https://github.com/kuakling/template-react-16-ssr.git
 $ cd template-react-16-ssr
-$ npm i
-$ npm start
+$ yarn
+$ yarn start
 ```
 
 This fires up the development server on port `3000`.
@@ -64,8 +82,14 @@ In order to build for production and run the finished project, execute
 the following:
 
 ```
-$ npm run build
-$ node public/index
+$ yarn build
+$ yarn server
+```
+
+## Building for Production on docker
+```
+$ docker build -t reactssr .
+$ docker run -p 3000:3000 -d reactssr
 ```
 
 This bundles and optimizes your app and runs it from the `public/`
