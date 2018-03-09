@@ -62,6 +62,7 @@ To start development, follow these steps:
 ```
 $ git clone https://github.com/kuakling/template-react-16-ssr.git
 $ cd template-react-16-ssr
+# Rename or Save-As .env-sample to .env and change your config
 $ yarn
 $ yarn start
 ```
