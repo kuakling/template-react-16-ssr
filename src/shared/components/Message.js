@@ -12,27 +12,21 @@ const PageTitle = () => (
 )
 
 @graphql(gql`
-query {
-  allFilms {
-    id
-    title
-    director
-    createdAt
+{
+  message {
+    text
   }
 }
 `)
-export default class Films extends Component {
+export default class Message extends Component {
   render() {
     if (this.props.data.loading) return (<div><PageTitle />Loading...</div>);
-    const { allFilms } = this.props.data;
+    const { message } = this.props.data;
     return (
       <div>
         <PageTitle />
-        <ul>
-          {allFilms.map(film => (
-            <li key={`film-${film.id}`}>{film.title}</li>
-          ))}
-        </ul>
+        <h4> Message from Graphql Server: </h4>
+        {message.text}
       </div>
     )
   }

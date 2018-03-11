@@ -7,7 +7,7 @@ import './style.global.styl';
 import Home from './components/Home';
 import About from './components/About';
 import Todos from './components/Todos';
-import Films from './components/Films';
+import Message from './components/Message';
 import NotFound from './components/NotFound';
 
 import Nav from './components/blocks/Nav';
@@ -33,7 +33,7 @@ export default class App extends Component {
           <Route exact path='/' component={Home} />
           <Route path='/about' component={About} />
           <Route path='/todos' component={Todos} />
-          <Route path='/films' component={Films} />
+          <Route path='/message' component={Message} />
           <Route component={NotFound} />
         </Switch>
       </div>

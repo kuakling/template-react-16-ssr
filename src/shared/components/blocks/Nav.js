@@ -19,7 +19,7 @@ export default class Nav extends Component {
             <Link to='/todos'>Todos (Redux)</Link>
           </li>
           <li>
-            <Link to='/films'>Films (Graphql)</Link>
+            <Link to='/message'>Message (Graphql)</Link>
           </li>
           <li>
             <Link to='/random-link'>Not Found</Link>
