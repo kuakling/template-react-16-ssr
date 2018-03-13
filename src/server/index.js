@@ -7,8 +7,10 @@ import flushChunks from 'webpack-flush-chunks';
 import { Provider } from 'react-redux';
 import { ApolloProvider, renderToStringWithData } from 'react-apollo';
 import { ApolloClient } from 'apollo-client';
+import { ApolloLink } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
+import { onError } from 'apollo-link-error';
 import 'isomorphic-fetch';
 
 import configureStore from '../shared/core/configure-store';
@@ -35,17 +37,41 @@ export default ({ clientStats }) => async (req, res) => {
     }]
   };
 
+  
+  const errorLink = onError(({ networkError, graphQLErrors }) => {
+    if (graphQLErrors) {
+      // graphQLErrors.map(({ message, locations, path }) =>
+      //   console.log(
+      //     `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+      //   ),
+      // );
+    }
+    if (networkError) {
+      // console.log(`[Network error]: ${networkError}`);
+    }
+    res.status(200);
+    res.render('index', ejsParams);
+    res.end();
+  });
+
+  const httpLink = createHttpLink({
+    uri: process.env.REACT_APP_APOLLO_URI,
+    credentials: 'same-origin',
+    headers: {
+      cookie: req.header('Cookie'),
+    },
+  });
+
+  const link = ApolloLink.from([
+    errorLink,
+    httpLink,
+  ]);
+
   const client = new ApolloClient({
     ssrMode: true,
     // Remember that this is the interface the SSR server will use to connect to the
     // API server, so we need to ensure it isn't firewalled, etc
-    link: createHttpLink({
-      uri: process.env.REACT_APP_APOLLO_URI,
-      credentials: 'same-origin',
-      headers: {
-        cookie: req.header('Cookie'),
-      },
-    }),
+    link,
     cache: new InMemoryCache(),
   });
 
@@ -70,6 +96,14 @@ export default ({ clientStats }) => async (req, res) => {
   const chunkNames = flushChunkNames();
   const { js, styles, cssHash } = flushChunks(clientStats, { chunkNames });
   const helmet = Helmet.renderStatic();
+  const ejsParams = {
+    appString,
+    js,
+    styles,
+    cssHash,
+    helmet,
+    preloadedState: JSON.stringify({ ...preloadedState, 'apollo': client.extract() })
+  };
 
 
   /*
@@ -83,20 +117,11 @@ export default ({ clientStats }) => async (req, res) => {
     res.end();
   } else {
     renderToStringWithData(app).then((content) => {
-      const initialState = client.extract();
-      const params = {
-        appString: content,
-        js,
-        styles,
-        cssHash,
-        helmet,
-        preloadedState: JSON.stringify({ ...preloadedState, 'apollo': initialState })
-      };
       res.status(200);
       if (process.env.NODE_ENV === 'development') {
-        res.render('index', params);
+        res.render('index', ejsParams);
       } else {
-        res.render('index', params, function(err, html) {
+        res.render('index', ejsParams, function(err, html) {
           if(err) res.send(err);
           const minify = require('html-minifier').minify;
           res.send(minify(html, {

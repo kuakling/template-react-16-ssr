@@ -7,7 +7,7 @@ import { Helmet } from "react-helmet";
 
 const PageTitle = () => (
   <Helmet>
-    <title>All films (Apollo Graphql)</title>
+    <title>Message (Apollo Graphql)</title>
   </Helmet>
 )
 
@@ -20,8 +20,13 @@ const PageTitle = () => (
 `)
 export default class Message extends Component {
   render() {
-    if (this.props.data.loading) return (<div><PageTitle />Loading...</div>);
-    const { message } = this.props.data;
+    const { loading, message, error } = this.props.data;
+    if (loading) return (<div><PageTitle />Loading...</div>);
+    if (error){
+      // console.log(error)
+      return (<div>{error.message}</div>);
+    }
+
     return (
       <div>
         <PageTitle />
