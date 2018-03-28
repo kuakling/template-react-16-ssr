@@ -32,6 +32,7 @@ the specific technologies are implemented.
   - Global style
   - Can run on subfolder url
   - Deploy on docker
+- Sample GraphQL server with Playground in api-graphql directory
 
 ### Base (feature/base)
 From master's brance of foke [rherwig/template-react-16-ssr](https://github.com/rherwig/template-react-16-ssr)
