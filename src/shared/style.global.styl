@@ -1,24 +1,14 @@
-html, body
-  margin 0
-  padding 0
-  display flex
+@import '~bulma/css/bulma.css';
 
 html
-  height 100%
+  min-height 100%
+  display flex
 
-body
-  background-color #e9ebee
-
-body, #react-root
+body, #react-root, .flex-full-page
+  display flex
   flex 1
 
-.btn
-  padding 5px;
-  
-  &.btn-primary
-    background-color #4267b2
-    border-color #4267b2
-    color #fff
-
-.this_is_style_global
-  background-color blue
+.flex-center-page
+  align-items center
+  justify-content center
+  flex-direction column

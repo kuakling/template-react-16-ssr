@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Helmet } from "react-helmet";
 
 import { addTodo } from '../actions/todos';
 
@@ -34,8 +35,11 @@ export default class Todos extends Component {
     const { todos } = this.props;
     return (
       <div>
+        <Helmet>
+          <title>Todos with Redux.</title>
+        </Helmet>
         <h1>Todos with Redux.</h1>
-        <button onClick={this.handleAddTodoClick} className={`btn btn-primary`}>Add random todo</button>
+        <button onClick={this.handleAddTodoClick} className={`button is-primary`}>Add random todo</button>
         <ul>
           {todos.map(todo =>
             <li key={todo.id}>{todo.name}</li>

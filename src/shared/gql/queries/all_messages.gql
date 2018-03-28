@@ -1,0 +1,7 @@
+#import "../fragments/message.gql"
+
+query message {
+  message {
+    ...Message
+  }
+}

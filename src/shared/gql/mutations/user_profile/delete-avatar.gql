@@ -1,0 +1,18 @@
+#import "../../fragments/user_profile.gql"
+
+mutation userProfileDeleteAvatar(
+  $avatar: String
+) {
+  userProfileDeleteAvatar(
+    avatar: $avatar
+  ){
+    ok
+    errors {
+      field
+      message
+    }
+    profile{
+      ...UserProfile
+    }
+  }
+}

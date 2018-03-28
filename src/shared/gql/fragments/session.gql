@@ -1,0 +1,13 @@
+#import "./user.gql"
+
+fragment Session on Session {
+  ok
+  jwt
+  errors {
+    field
+    message
+  }
+  user {
+    ...User
+  }
+}

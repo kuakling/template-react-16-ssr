@@ -2,26 +2,15 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
-import { Helmet } from "react-helmet";
+import allMessages from '../gql/queries/all_messages.gql';
+import PageTitle from './blocks/PageTitle';
 
 
-const PageTitle = () => (
-  <Helmet>
-    <title>Message (Apollo Graphql)</title>
-  </Helmet>
-)
-
-@graphql(gql`
-{
-  message {
-    text
-  }
-}
-`)
+@graphql(allMessages)
 export default class Message extends Component {
   render() {
     const { loading, message, error } = this.props.data;
-    if (loading) return (<div><PageTitle />Loading...</div>);
+    if (loading) return (<div><PageTitle title="Loading Message (Apollo Graphql)" />Loading...</div>);
     if (error){
       // console.log(error)
       return (<div>{error.message}</div>);
@@ -29,7 +18,7 @@ export default class Message extends Component {
 
     return (
       <div>
-        <PageTitle />
+        <PageTitle title="Message (Apollo Graphql)" />
         <h4> Message from Graphql Server: </h4>
         {message.text}
       </div>

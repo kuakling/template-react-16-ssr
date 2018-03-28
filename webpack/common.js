@@ -1,6 +1,9 @@
 import { join } from 'path';
 
 export default {
+  entry: [
+    'babel-polyfill',
+  ],
   output: {
     path: join(__dirname, '../public/assets'),
     publicPath: '/'
@@ -16,6 +19,11 @@ export default {
     rules: [{
       test: /\.js$/,
       use: 'babel-loader'
+    },
+    {
+      test: /\.(graphql|gql)$/,
+      exclude: /node_modules/,
+      loader: 'graphql-tag/loader',
     }]
   }
 };

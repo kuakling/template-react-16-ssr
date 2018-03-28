@@ -1,4 +1,4 @@
-import { ADD_TODO } from '../actions/todos';
+import { ADD_TODO } from '../actions/types';
 
 /**
  * This example reducer handle the creation of todo items.

@@ -1,18 +1,33 @@
 {
-  "name": "api-graphql",
+  "name": "graphql",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "babel-node ./index"
+    "start": "babel-node ./index",
+    "dev": "nodemon --exec babel-node -- ./index"
   },
   "dependencies": {
     "apollo-server-express": "^1.3.2",
+    "bcrypt": "^1.0.3",
+    "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
     "cors": "^2.8.4",
-    "graphql-playground-middleware-express": "^1.5.7"
+    "express": "^4.16.3",
+    "graphql": "^0.13.1",
+    "graphql-playground-middleware-express": "^1.5.7",
+    "jsonwebtoken": "^8.2.0",
+    "mongoose": "^5.0.10",
+    "mongoose-unique-validator": "^2.0.0",
+    "passport": "^0.4.0",
+    "passport-google-oauth2": "^0.1.6"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0"
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "nodemon": "^1.17.1"
   }
 }

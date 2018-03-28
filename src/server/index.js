@@ -13,6 +13,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { onError } from 'apollo-link-error';
 import 'isomorphic-fetch';
 
+import config from '../shared/core/config';
 import configureStore from '../shared/core/configure-store';
 import App from '../shared/App';
 
@@ -54,16 +55,27 @@ export default ({ clientStats }) => async (req, res) => {
     res.end();
   });
 
+  const cache = new InMemoryCache();
+  const authMiddleware = new ApolloLink((operation, forward) => {
+    // add the authorization to the headers
+    const token = req.cookies[config.auth.storageName]
+    operation.setContext(({ headers = {} }) => ({
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : undefined,
+      } 
+    }));
+  
+    return forward(operation);
+  });
   const httpLink = createHttpLink({
-    uri: process.env.REACT_APP_APOLLO_URI,
+    uri: config.apollo.uri,
     credentials: 'same-origin',
-    headers: {
-      cookie: req.header('Cookie'),
-    },
   });
 
   const link = ApolloLink.from([
     errorLink,
+    authMiddleware,
     httpLink,
   ]);
 
@@ -72,7 +84,7 @@ export default ({ clientStats }) => async (req, res) => {
     // Remember that this is the interface the SSR server will use to connect to the
     // API server, so we need to ensure it isn't firewalled, etc
     link,
-    cache: new InMemoryCache(),
+    cache,
   });
 
   const store = configureStore(preloadedState);
@@ -92,7 +104,7 @@ export default ({ clientStats }) => async (req, res) => {
     </ApolloProvider>
   );
 
-  const appString = ReactDOM.renderToString(app);
+  const appString = ReactDOM.renderToNodeStream(app);
   const chunkNames = flushChunkNames();
   const { js, styles, cssHash } = flushChunks(clientStats, { chunkNames });
   const helmet = Helmet.renderStatic();
@@ -102,7 +114,8 @@ export default ({ clientStats }) => async (req, res) => {
     styles,
     cssHash,
     helmet,
-    preloadedState: JSON.stringify({ ...preloadedState, 'apollo': client.extract() })
+    preloadedState: JSON.stringify({ ...preloadedState }),
+    apolloState: JSON.stringify({})
   };
 
 
@@ -118,6 +131,9 @@ export default ({ clientStats }) => async (req, res) => {
   } else {
     renderToStringWithData(app).then((content) => {
       res.status(200);
+      ejsParams.appString = content;
+      // ejsParams.preloadedState = JSON.stringify({ ...preloadedState })
+      ejsParams.apolloState = JSON.stringify(client.extract())
       if (process.env.NODE_ENV === 'development') {
         res.render('index', ejsParams);
       } else {

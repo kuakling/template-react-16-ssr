@@ -1,0 +1,16 @@
+#import "../../fragments/user.gql"
+
+mutation signup($username: String, $email: String, $password: String, $confirm: String){
+  signup(
+    username: $username, email: $email, password: $password, confirm: $confirm
+  ){
+    ok
+    errors {
+      field
+      message
+    }
+    user {
+      ...User
+    }
+  }
+}

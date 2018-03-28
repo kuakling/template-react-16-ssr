@@ -1,0 +1,18 @@
+#import "../../fragments/user_profile.gql"
+
+mutation userProfileDeleteCover(
+  $cover: String
+) {
+  userProfileDeleteCover(
+    cover: $cover
+  ){
+    ok
+    errors {
+      field
+      message
+    }
+    profile{
+      ...UserProfile
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import express from 'express';
 import { join } from 'path';
 import { log } from 'winston';
+import cookieParser from 'cookie-parser';
 
 /**
  * Configures hot reloading and assets paths for local development environment.
@@ -52,6 +53,7 @@ const configureProduction = app => {
 };
 
 const app = express();
+app.use(cookieParser());
 
 log('info', `Configuring server for environment: ${process.env.NODE_ENV}...`);
 if (process.env.NODE_ENV === 'development') {

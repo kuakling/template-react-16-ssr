@@ -1,0 +1,12 @@
+# IntelliJ
+.idea
+
+# Environment file
+.env
+
+# NodeJS
+node_modules
+
+config.js
+
+yarn-error.log

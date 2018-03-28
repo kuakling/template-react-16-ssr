@@ -1,0 +1,14 @@
+export default {
+  auth: {
+    storageName: 'appJWT',
+    oAuth: {
+      google: {
+        clientID: 'YOUR_GOOGLE_CLIENT_ID',
+        clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET'
+      }
+    }
+  },
+  jwt: {
+    secretKey: 'MY_SCRECRET'
+  },
+}

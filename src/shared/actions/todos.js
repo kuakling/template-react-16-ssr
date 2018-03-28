@@ -1,4 +1,4 @@
-export const ADD_TODO = 'ADD_TODO';
+import { ADD_TODO } from './types';
 
 /**
  * This method is used to create the ADD_TODO action.

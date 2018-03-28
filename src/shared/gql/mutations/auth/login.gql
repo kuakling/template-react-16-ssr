@@ -1,0 +1,15 @@
+#import "../../fragments/user.gql"
+
+mutation login($identity: String, $password: String) {
+  login(identity: $identity, password: $password) {
+    ok
+    errors {
+      field
+      message
+    }
+    jwt
+    user {
+      ...User
+    }
+  }
+}

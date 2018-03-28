@@ -1,0 +1,22 @@
+#import "../../fragments/user_profile.gql"
+
+mutation userProfileChangeAvatar(
+  $avatarOffset: String
+  $avatarCropped: String
+  $avatar: String
+) {
+  userProfileChangeAvatar(
+    avatarOffset: $avatarOffset
+    avatarCropped: $avatarCropped
+    avatar: $avatar
+  ){
+    ok
+    errors {
+      field
+      message
+    }
+    profile{
+      ...UserProfile
+    }
+  }
+}
