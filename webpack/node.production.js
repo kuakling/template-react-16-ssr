@@ -13,7 +13,6 @@ export default merge(common, {
     __filename: false
   },
   entry: [
-    'babel-polyfill',
     join(__dirname, '../src/index')
   ],
   output: {

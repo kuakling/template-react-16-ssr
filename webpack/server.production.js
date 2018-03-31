@@ -10,7 +10,6 @@ export default merge(common, {
   target: 'node',
   externals: nodeExternals,
   entry: [
-    'babel-polyfill',
     join(__dirname, '../src/server/index')
   ],
   devtool: 'inline-source-map',

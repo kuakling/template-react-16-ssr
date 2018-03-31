@@ -41,14 +41,14 @@ export default ({ clientStats }) => async (req, res) => {
   
   const errorLink = onError(({ networkError, graphQLErrors }) => {
     if (graphQLErrors) {
-      // graphQLErrors.map(({ message, locations, path }) =>
-      //   console.log(
-      //     `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-      //   ),
-      // );
+      graphQLErrors.map(({ message, locations, path }) =>
+        console.log(
+          `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+        ),
+      );
     }
     if (networkError) {
-      // console.log(`[Network error]: ${networkError}`);
+      console.log(`[Network error]: ${networkError}`);
     }
     res.status(200);
     res.render('index', ejsParams);
@@ -104,7 +104,7 @@ export default ({ clientStats }) => async (req, res) => {
     </ApolloProvider>
   );
 
-  const appString = ReactDOM.renderToNodeStream(app);
+  const appString = ReactDOM.renderToStaticMarkup(app);
   const chunkNames = flushChunkNames();
   const { js, styles, cssHash } = flushChunks(clientStats, { chunkNames });
   const helmet = Helmet.renderStatic();

@@ -6,6 +6,8 @@ import { ApolloProvider } from 'react-apollo';
 import { ApolloClient } from 'apollo-client';
 // import { setContext } from 'apollo-link-context';
 import { HttpLink } from 'apollo-link-http';
+import { onError } from 'apollo-link-error';
+import { withClientState } from 'apollo-link-state';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
@@ -18,6 +20,18 @@ import { getCookie } from '../shared/core/helpers';
 const store = configureStore(window.__PRELOADED_STATE__);
 const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
 
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    graphQLErrors.map(({ message, locations, path }) =>
+      console.log(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+      ),
+    );
+  }
+  if (networkError) {
+    console.log(`[Network error]: ${networkError}`);
+  }
+});
 const authMiddleware = new ApolloLink((operation, forward) => {
   // add the authorization to the headers
   const token = localStorage.getItem(config.auth.storageName) || getCookie(config.auth.storageName)
@@ -36,6 +50,20 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 
   return forward(operation);
 });
+const clientState = withClientState({
+  defaults: {
+    isConnected: true
+  },
+  resolvers: {
+    Mutation: {
+      updateNetworkStatus: (_, { isConnected }, { cache }) => {
+        cache.writeData({ data: { isConnected }});
+        return null;
+      }
+    }
+  },
+  cache
+})
 // const token = localStorage.getItem(config.auth.storageName) || getCookie(config.auth.storageName);
 const httpLink = createHttpLink({
   uri: config.apollo.uri,
@@ -47,7 +75,9 @@ const httpLink = createHttpLink({
 
 // use with apollo-client
 const link = ApolloLink.from([
+  errorLink,
   authMiddleware,
+  clientState,
   httpLink,
 ]);
 

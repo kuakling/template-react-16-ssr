@@ -47,8 +47,12 @@ export default class Nav extends Component {
   }
 
   render() {
-    const { loading, session } = this.props.data;
+    const { error, loading, session } = this.props.data;
     if (loading) return (<div>Loading...</div>);
+    if(error) {
+      console.log(error)
+      return (<div>55556</div>)
+    }
     const links = genLinks(session.ok ? 1 : 0);
     return (
       <nav className="navbar is-primary">

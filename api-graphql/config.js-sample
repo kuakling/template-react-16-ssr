@@ -1,3 +1,6 @@
+import path from 'path';
+const serverUrl = 'http://localhost';
+
 export default {
   auth: {
     storageName: 'appJWT',
@@ -11,4 +14,40 @@ export default {
   jwt: {
     secretKey: 'MY_SCRECRET'
   },
+  upload: {
+    enpointUrl: `${serverUrl}/upload`,
+    unlinkUrl: `${serverUrl}/unlink`,
+    autoCreateDir: true,
+    baseDir: path.join(__dirname, process.env.NODE_ENV === 'development' ? 'dev' : 'public', 'uploads'),
+    // baseUrl: `${serverUrl}/uploads`,
+    // baseUrl: (SERVER ? '' : serverUrl) + '/uploads',
+    baseUrl: (!process.env.NODE_ENV === 'development' && SERVER ? '' : serverUrl) + '/uploads',
+    // baseUrl: serverUrl + (process.env.NODE_ENV === 'development' ? '/dev' : '/public') + '/uploads',
+    csrf: 'any secret key to upload',
+    secretKey: 'UPLOAD_SECRET',
+  },
+  modules: {
+    user: {
+      url: '/user',
+      upload: {
+        path: 'user',
+      },
+      avatar: {
+        path: 'avatars',
+        aspectRatio: 1,
+        size: {
+          width: 300,
+          height: 300,
+        }
+      },
+      cover: {
+        path: 'covers',
+        aspectRatio: 16 / 6,
+        size: {
+          width: 1024,
+          height: 383,
+        }
+      },
+    }
+  }
 }
