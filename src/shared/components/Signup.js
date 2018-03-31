@@ -1,214 +1,213 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
 import { Link } from 'react-router-dom';
-import { Helmet } from "react-helmet";
-import fontawesome from '@fortawesome/fontawesome';
-import brands from '@fortawesome/fontawesome-free-brands';
-import { faUserPlus, faUser, faKey, faCheck, faEnvelope } from '@fortawesome/fontawesome-free-solid';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-
+import { Redirect } from 'react-router';
+import { Card, Form, Input, Checkbox, Button, Modal, message, notification } from 'antd';
+import { graphql } from 'react-apollo';
 import sessionQuery from '../gql/queries/session.gql';
 import signUpMutation from '../gql/mutations/user/signup.gql';
-
-fontawesome.library.add(brands, faUserPlus, faUser, faKey, faCheck, faEnvelope)
-
-const ConfirmUrl = props => (
-  <div className="notification" style={{
-    position: 'absolute',
-    top: 60,
-    right: 0,
-    zIndex: 1
-  }}>
-    <h4>This url value for send e-mail for signup user</h4>
-    <Link to={`/auth/confirm/${props.token}`}>
-      Click here to confirm account
-    </Link>
-    <div className="field">
-      <div className="control">
-        <textarea
-          className="textarea is-success"
-          defaultValue={`${process.env.REACT_APP_WEB_URL}/${process.env.REACT_APP_BASE_URL}/auth/confirm/${props.token}`}
-        />
-      </div>
-    </div>
-  </div>
-);
+const FormItem = Form.Item;
 
 @graphql(sessionQuery)
 @graphql(signUpMutation)
-export default class Signup extends Component {
+@Form.create()
+export default class SignUp extends React.Component {
   state = {
     loading: false,
     errors: [],
-    username: 'test',
-    email: 'test@test.com',
-    password: 'test',
-    confirm: 'test',
-    confirmationToken: null,
+    confirmDirty: false,
+  };
+
+  redirectToConfirm = (uri, notiKey) => {
+    this.props.history.push(uri);
+    notification.close(notiKey)
   }
 
-  handleSubmit = (e) => {
+  openNotification = (token) => {
+    const key = `open${Date.now()}`;
+    const btn = (
+      <Button type="primary" onClick={() => this.redirectToConfirm(`/auth/confirm/${token}`, key)}>
+        Click here to confirm account
+      </Button>
+    );
+    const args = {
+      message: 'Please confirm account before login',
+      description: `${process.env.REACT_APP_WEB_URL}/${process.env.REACT_APP_BASE_URL}/auth/confirm/${token}`,
+      duration: 0,
+      btn,
+      key,
+    };
+    notification.warning(args);
+  };
+
+  trySubmit = async (e, formValues) => {
     e.preventDefault();
-    const { password, confirm } = this.state;
-    if (password !== confirm) {
-      return alert('Confirm password no match.');
-    }
-    this.trySubmit(e);
-  }
-
-  trySubmit = async (e) => {
     this.setState({ loading: true })
     try {
       const { data: { signup } } = await this.props.mutate({
-        variables: this.state,
+        variables: formValues,
       });
-
-      console.log(signup)
+      
       if (signup.errors) {
-        this.setState({
-          errors: signup.errors,
-          loading: false
+        this.setState({ 
+          errors: signup.errors, 
+          loading: false 
         });
         throw new Error('Form Input error');
-      } else {
-        this.setState({
-          confirmationToken: signup.user.confirmationToken
-        });
-        // this.props.form.resetFields();
-        // e.target.reset();
-        alert('Signup Success ^_^ Please confirm your account ');
+      }else{
+        this.props.form.resetFields();
+        message.success('Update success');
+        this.openNotification(signup.user.confirmationToken)
         // this.props.history.push('/');
-        return;
       }
     } catch (err) {
-      // alert('Signup fail ' + this.state.errors.map(e => e.message).join("\n"));
+      Modal.error({
+        title: 'Signup error',
+        // content: err.message,
+        content: this.state.errors.map(e => err.message).join("\n")
+      });
       this.setState({ loading: false })
-      console.error('GraphQL error: ', this.state.errors);
+      // Some kind of error was returned -- display it in the console
+      // eslint-disable-next-line no-console
+      console.error('GraphQL error: ', this.state.errors.map(e => err.message).join("\n"));
     }
     this.setState({ loading: false })
   }
 
-  handleFormChange = e => {
-    this.setState({
-      [e.target.name]: e.target.value
-    })
+  handleSubmit = (e) => {
+    e.preventDefault();
+    this.props.form.validateFieldsAndScroll((err, values) => {
+      if (!err) {
+        // console.log('Received values of form: ', values);
+        this.trySubmit(e, values);
+      }
+    });
+  }
+  handleConfirmBlur = (e) => {
+    const value = e.target.value;
+    this.setState({ confirmDirty: this.state.confirmDirty || !!value });
+  }
+  checkPassword = (rule, value, callback) => {
+    const form = this.props.form;
+    if (value && value !== form.getFieldValue('password')) {
+      callback('Two passwords that you enter is inconsistent!');
+    } else {
+      callback();
+    }
+  }
+  checkConfirm = (rule, value, callback) => {
+    const form = this.props.form;
+    if (value && this.state.confirmDirty) {
+      form.validateFields(['confirm'], { force: true });
+    }
+    callback();
   }
 
   render() {
-    const errorMessages = {};
-    this.state.errors.map(error => {
-      errorMessages[error.field] = error.message;
-    })
+    const { data } = this.props;
+    if(data.loading) return <div>Loading...</div>;
+    if(data.session.ok) return <Redirect to="/" />;
+
+    const { getFieldDecorator } = this.props.form;
+
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 24 },
+        sm: { span: 6 },
+      },
+      wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 14 },
+      },
+    };
+    const tailFormItemLayout = {
+      wrapperCol: {
+        xs: {
+          span: 24,
+          offset: 0,
+        },
+        sm: {
+          span: 14,
+          offset: 6,
+        },
+      },
+    };
 
     return (
-      <div className="flex-full-page flex-center-page">
-        <Helmet>
-          <title>Register a new account</title>
-        </Helmet>
-        {this.state.confirmationToken ? <ConfirmUrl token={this.state.confirmationToken} /> : ''}
-        <div className="card" style={{ width: '400px' }}>
-          <form onSubmit={this.handleSubmit}>
-            <header className="card-header">
-              <p className="card-header-title">
-                <span className="icon">
-                  <FontAwesomeIcon icon={["fas", "user-plus"]} />
-                </span>
-                <span>Signup</span>
-              </p>
-            </header>
-            <div className="card-content">
-              <div className="content">
-                <div className="field">
-                  <label className="label">Username</label>
-                  <div className="control has-icons-left">
-                    <input
-                      type="text"
-                      name="username"
-                      id="username"
-                      className={`input${errorMessages.username ? ' is-danger' : ''}`}
-                      placeholder="Username"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.username}
-                    />
-                    <span className="icon is-small is-left">
-                      <FontAwesomeIcon icon={["fas", "user"]} />
-                    </span>
-                  </div>
-                  {errorMessages.username ? <p className="help is-danger">{errorMessages.username}</p> : ''}
-                </div>
-
-                <div className="field">
-                  <label className="label">E-Mail</label>
-                  <div className="control has-icons-left">
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      className={`input${errorMessages.email ? ' is-danger' : ''}`}
-                      placeholder="E-mail"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.email}
-                    />
-                    <span className="icon is-small is-left">
-                      <FontAwesomeIcon icon={["fas", "envelope"]} />
-                    </span>
-                  </div>
-                  {errorMessages.email ? <p className="help is-danger">{errorMessages.email}</p> : ''}
-                </div>
-
-                <div className="field">
-                  <label className="label">Password</label>
-                  <div className="control has-icons-left">
-                    <input
-                      type="password"
-                      name="password"
-                      id="password"
-                      className="input"
-                      placeholder="Password"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.password}
-                    />
-                    <span className="icon is-small is-left">
-                      <FontAwesomeIcon icon={["fas", "key"]} />
-                    </span>
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label className="label">Comfirm password</label>
-                  <div className="control has-icons-left">
-                    <input
-                      type="password"
-                      name="confirm"
-                      id="confirm"
-                      className="input"
-                      placeholder="Comfirm password"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.confirm}
-                    />
-                    <span className="icon is-small is-left">
-                      <FontAwesomeIcon icon={["fas", "key"]} />
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <button type="submit" className="button is-primary">
-                    <span className="icon">
-                      <FontAwesomeIcon icon={["fas", "check"]} />
-                    </span>
-                    <span>Signup</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
+      <div className={`inside-center-middle signup-component`}>
+        <h1>Sign Up</h1>
+        <Card style={{ width: 500 }}>
+          <Form onSubmit={this.handleSubmit}>
+            <FormItem
+              {...formItemLayout}
+              label="Username"
+              hasFeedback
+            >
+              {getFieldDecorator('username', {
+                rules: [{
+                  required: true, message: 'Please input your Username!',
+                }],
+              })(
+                <Input />
+              )}
+            </FormItem>
+            <FormItem
+              {...formItemLayout}
+              label="E-mail"
+              hasFeedback
+            >
+              {getFieldDecorator('email', {
+                rules: [{
+                  type: 'email', message: 'The input is not valid E-mail!',
+                }, {
+                  required: true, message: 'Please input your E-mail!',
+                }],
+              })(
+                <Input />
+              )}
+            </FormItem>
+            <FormItem
+              {...formItemLayout}
+              label="Password"
+              hasFeedback
+            >
+              {getFieldDecorator('password', {
+                rules: [{
+                  required: true, message: 'Please input your password!',
+                }, {
+                  validator: this.checkConfirm,
+                }],
+              })(
+                <Input type="password" />
+              )}
+            </FormItem>
+            <FormItem
+              {...formItemLayout}
+              label="Confirm Password"
+              hasFeedback
+            >
+              {getFieldDecorator('confirm', {
+                rules: [{
+                  required: true, message: 'Please confirm your password!',
+                }, {
+                  validator: this.checkPassword,
+                }],
+              })(
+                <Input type="password" onBlur={this.handleConfirmBlur} />
+              )}
+            </FormItem>
+            <FormItem {...tailFormItemLayout} style={{ marginBottom: 8 }}>
+              {getFieldDecorator('agreement', {
+                valuePropName: 'checked',
+              })(
+                <Checkbox>I have read the <a href="">agreement</a></Checkbox>
+              )}
+            </FormItem>
+            <FormItem {...tailFormItemLayout}>
+              <Button type="primary" htmlType="submit">Register</Button>
+            </FormItem>
+          </Form>
+        </Card>
       </div>
-    )
+    );
   }
 }

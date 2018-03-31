@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
+import { Redirect } from 'react-router';
+import { Link } from 'react-router-dom';
 import { graphql } from 'react-apollo';
 import { Helmet } from "react-helmet";
-import fontawesome from '@fortawesome/fontawesome';
-import { faUser, faKey, faLock, faSignInAlt } from '@fortawesome/fontawesome-free-solid';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import { Card, Form, Input, Icon, Button, Modal, message } from 'antd';
 import config from '../../../../shared/core/config';
 import sessionQuery from '../../../gql/queries/session.gql';
 import loginMutation from '../../../gql/mutations/auth/login.gql';
 
-fontawesome.library.add(faUser, faKey, faLock, faSignInAlt)
+const FormItem = Form.Item;
 
 @graphql(sessionQuery)
 @graphql(loginMutation, {
@@ -23,42 +23,47 @@ fontawesome.library.add(faUser, faKey, faLock, faSignInAlt)
     },
   },
 })
+@Form.create()
 export default class Login extends Component {
   state = {
     loading: false,
     errors: [],
-    identity: '',
-    password: '',
-  }
+    confirmDirty: false,
+  };
 
-  trySubmit = async (e) => {
+  trySubmit = async (e, formValues) => {
     e.preventDefault();
     this.setState({ loading: true })
     try {
       const { data: { login } } = await this.props.mutate({
-        variables: this.state,
+        variables: formValues,
       });
-      // console.log(login)
-
+      
       if (login.errors) {
-        this.setState({
-          errors: login.errors,
-          loading: false
+        this.setState({ 
+          errors: login.errors, 
+          loading: false 
         });
         throw new Error('Form Input error');
-      } else {
+      }else{
         if (!SERVER) {
           // window.localStorage.setItem(config.auth.storageName, login.jwt);
           document.cookie = `${config.auth.storageName}=${login.jwt}; path=/`;
         }
-        console.log('Login success');
+        this.props.form.resetFields();
+        message.success('Login success');
         this.props.history.push('/');
         return;
       }
     } catch (err) {
-      // alert(this.state.errors.map(e => e.message).join("\n"))
-      console.log(this.state.errors)
+      Modal.error({
+        title: 'Error',
+        // content: err.message,
+        content: this.state.errors.map(e => e.message).join("\n")
+      });
       this.setState({ loading: false })
+      // Some kind of error was returned -- display it in the console
+      // eslint-disable-next-line no-console
       console.error('GraphQL error: ', this.state.errors.map(e => e.message).join("\n"));
     }
     this.setState({ loading: false })
@@ -66,90 +71,50 @@ export default class Login extends Component {
 
   handleSubmit = (e) => {
     e.preventDefault();
-    this.trySubmit(e);
+    this.props.form.validateFieldsAndScroll((err, values) => {
+      if (!err) {
+        // console.log('Received values of form: ', values);
+        this.trySubmit(e, values);
+      }
+    });
   }
-
-  handleFormChange = e => {
-    this.setState({
-      [e.target.name]: e.target.value
-    })
-  }
+  
 
   render() {
-    const errorMessages = {};
-    this.state.errors.map(error => {
-      errorMessages[error.field] = error.message;
-    })
+    const { data } = this.props;
+    if(data.loading) return <div>Loading...</div>;
+    if(data.session.ok) return <Redirect to="/" />;
+    
+    const { getFieldDecorator } = this.props.form;
     return (
-      <div className="flex-full-page flex-center-page">
-        <Helmet>
-          <title>Login</title>
-        </Helmet>
-        <div className="card" style={{ width: '400px' }}>
-          <form onSubmit={this.handleSubmit}>
-            <header className="card-header">
-              <p className="card-header-title">
-                <span className="icon">
-                  <FontAwesomeIcon icon={["fas", "lock"]} />
-                </span>
-                <span>Login</span>
-              </p>
-            </header>
-            <div className="card-content">
-              <div className="content">
-                <div className="field">
-                  <label className="label">Identity</label>
-                  <p className="control has-icons-left">
-                    <input
-                      type="text"
-                      name="identity"
-                      id="identity"
-                      className={`input${errorMessages.identity ? ' is-danger' : ''}`}
-                      placeholder="Username or E-mail"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.username}
-                    />
-                    <span className="icon is-small is-left">
-                      <FontAwesomeIcon icon={["fas", "user"]} />
-                    </span>
-                  </p>
-                  { errorMessages.identity ? <p className="help is-danger">{errorMessages.identity}</p> : '' }
-                </div>
-
-                <div className="field">
-                  <label className="label">Password</label>
-                  <p className="control has-icons-left">
-                    <input
-                      type="password"
-                      name="password"
-                      id="password"
-                      className={`input${errorMessages.password ? ' is-danger' : ''}`}
-                      placeholder="Password"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.password}
-                    />
-                    <span className="icon is-small is-left">
-                      <FontAwesomeIcon icon={["fas", "key"]} />
-                    </span>
-                  </p>
-                  { errorMessages.password ? <p className="help is-danger">{errorMessages.password}</p> : '' }
-                </div>
-
-                <div>
-                  <button type="submit" className="button is-primary">
-                    <span className="icon">
-                      <FontAwesomeIcon icon={["fas", "sign-in-alt"]} />
-                    </span>
-                    <span>Login</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
+      <div className={`login-component inside-center-middle`}>
+        <h1>Sign In</h1>
+        <Card style={{ width: 300 }}>
+          <Form onSubmit={this.handleSubmit} className="login-form">
+            <FormItem>
+              {getFieldDecorator('identity', {
+                rules: [{ required: true, message: 'Please input your identity!' }],
+              })(
+                <Input prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />} placeholder="Username or E-Mail" />
+              )}
+            </FormItem>
+            <FormItem>
+              {getFieldDecorator('password', {
+                rules: [{ required: true, message: 'Please input your Password!' }],
+              })(
+                <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />} type="password" placeholder="Password" />
+              )}
+            </FormItem>
+            <FormItem>
+              <Button type="primary" htmlType="submit" className="login-form-button" style={{width: '100%'}}>
+                Sign in
+              </Button>
+              <Link to="/auth/forgot-password">Forgot password</Link>
+              Or <Link to="/signup">register now!</Link>
+            </FormItem>
+          </Form>
+        </Card>
       </div>
-    )
+    );
   }
 }

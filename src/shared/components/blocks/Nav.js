@@ -1,15 +1,10 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import fontawesome from '@fortawesome/fontawesome'
-import brands from '@fortawesome/fontawesome-free-brands'
-import FontAwesomeIcon from '@fortawesome/react-fontawesome'
 import { graphql } from 'react-apollo';
 import sessionQuery from '../../gql/queries/session.gql';
 import PageTitle from './PageTitle';
 
 import css from './nav.styl';
-
-fontawesome.library.add(brands)
 
 const guestLinks = [
   { to: '/auth/login', title: 'Login' },
@@ -58,9 +53,6 @@ export default class Nav extends Component {
       <nav className="navbar is-primary">
         <div className="navbar-brand">
           <Link to="/" className="navbar-item" style={{ fontWeight: 'bold' }}>
-            <span className="icon">
-              <FontAwesomeIcon icon={['fab', 'react']} />
-            </span>
             <span>Universal React Fiber</span>
           </Link>
           <div className="navbar-burger burger" data-target="navMenu" onClick={this.toggleNav}>
@@ -82,9 +74,6 @@ export default class Nav extends Component {
               <div className="field is-grouped">
                 <p className="control">
                   <a className="button" href="https://github.com/kuakling/template-react-16-ssr" target="_blank">
-                    <span className="icon">
-                      <FontAwesomeIcon icon={["fab", "github-alt"]} />
-                    </span>
                     <span>Github</span>
                   </a>
                 </p>

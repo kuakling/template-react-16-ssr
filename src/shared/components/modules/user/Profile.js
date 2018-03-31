@@ -1,13 +1,31 @@
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
 import { Helmet } from "react-helmet";
-import fontawesome from '@fortawesome/fontawesome';
-import { faCheck, faSmile } from '@fortawesome/fontawesome-free-solid';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import { Card, Form, Icon, Input, Button, Modal, message } from 'antd';
 import sessionQuery from '../../../gql/queries/session.gql';
 import updateProfileMutation from '../../../gql/mutations/user_profile/update.gql';
 
-fontawesome.library.add(faCheck, faSmile)
+const FormItem = Form.Item;
+
+const formItems = [
+  {
+    label: "First name",
+    input: {
+      type: 'text',
+      placeholder: "First name",
+      name:"firstName",
+    },
+    rules: [{ required: true, message: 'Please input your first name!' }],
+  },
+  {
+    label: "Last name",
+    input: {
+      placeholder: "Last name",
+      name:"lastName",
+    },
+    rules: [{ required: true, message: 'Please input your last name!' }],
+  },
+];
 
 @graphql(sessionQuery)
 @graphql(updateProfileMutation, {
@@ -22,24 +40,44 @@ fontawesome.library.add(faCheck, faSmile)
     },
   },
 })
+@Form.create()
 export default class Profile extends Component {
 
-  state = {
-    loading: false,
-    errors: [],
-    firstName: this.props.data.session.user.profile.firstName,
-    lastName: this.props.data.session.user.profile.lastName
+  constructor(props) {
+    super(props)
+
+    this.user = props.data.session.user;
+    const { id, username, email } = this.user;
+    const { firstName, lastName, bio } = this.user.profile;
+    this.state = {
+      firstName,
+      lastName,
+      bio,
+      loading: false,
+      errors: [],
+      propsLoaded: false,
+    }
   }
 
-  handleFormChange = e => {
+  handleChange = e => {
     this.setState({
       [e.target.name]: e.target.value
     });
   }
 
-  handleSubmit = async (e) => {
+  handleSubmit = (e) => {
     e.preventDefault();
+    // console.log(this.state);
+    this.props.form.validateFields((err, values) => {
+      if (!err) {
+        // console.log('Received values of form: ', values);
+        this.trySubmit(e)
+      }
+    });
+  }
 
+  trySubmit = async (e) => {
+    e.preventDefault();
     this.setState({ loading: true })
     try {
       const { data: { userProfileUpdate } } = await this.props.mutate({
@@ -56,86 +94,58 @@ export default class Profile extends Component {
         });
         return;
       }
-      alert('Update success');
+      message.success('Update success');
     } catch (err) {
-      alert(err.message)
-      // this.setState({ loading: false })
+      Modal.error({
+        title: 'Update error',
+        content: err.message,
+      });
+      this.setState({ loading: false })
       // Some kind of error was returned -- display it in the console
       // eslint-disable-next-line no-console
-      // console.error('update error: ', e.message);
+      console.error('GraphQL error: ', e.message);
     }
     this.setState({ loading: false })
   }
 
   render() {
-    const errorMessages = {};
-    this.state.errors.map(error => {
-      errorMessages[error.field] = error.message;
-    })
+    const { getFieldDecorator } = this.props.form;
+    const formLayout = 'horizontal';
+    const formItemLayout = formLayout === 'horizontal' ? {
+      labelCol: { span: 4 },
+      wrapperCol: { span: 20 },
+    } : null;
+    const buttonItemLayout = formLayout === 'horizontal' ? {
+      wrapperCol: { span: 20, offset: 4 },
+    } : null;
+
     return (
-      <div className="flex-full-page flex-center-page">
-        <Helmet>
-          <title>Your profile</title>
-        </Helmet>
-        <div className="card" style={{ width: '400px' }}>
-          <form onSubmit={this.handleSubmit} className="box-1">
-            <header className="card-header">
-              <p className="card-header-title">
-                <span className="icon">
-                  <FontAwesomeIcon icon={["fas", "smile"]} />
-                </span>
-                <span>Update your profile</span>
-              </p>
-            </header>
-            <div className="card-content">
-              <div className="content">
-                <div className="field">
-                  <label className="label">Firstname</label>
-                  <div className="control">
-                    <input
-                      type="text"
-                      name="firstName"
-                      id="firstName"
-                      className={`input${errorMessages.firstName ? ' is-danger' : ''}`}
-                      placeholder="Firstname"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.firstName}
-                    />
-                  </div>
-                  { errorMessages.firstName ? <p className="help is-danger">{errorMessages.firstName}</p> : '' }
-                </div>
+      <Card
+        hoverable
+      >
+        <Form onSubmit={this.handleSubmit} layout={'horizontal'} className={`profile-form`}>
+          {formItems.map(item => (
+            <FormItem
+              key={`form-item-${item.input.name}`}
+              label={item.label}
+              {...formItemLayout}
+            >
+              {getFieldDecorator(item.input.name, {
+                rules: item.rules || [],
+                initialValue: this.state[item.input.name],
+              })(
+                <Input {...item.input} onChange={this.handleChange} />
+              )}
+            </FormItem>
+          ))}
 
-                <div className="field">
-                  <label className="label">Lastname</label>
-                  <div className="control">
-                    <input
-                      type="text"
-                      name="lastName"
-                      id="lastName"
-                      className={`input${errorMessages.email ? ' is-danger' : ''}`}
-                      placeholder="Lastname"
-                      required
-                      onChange={this.handleFormChange}
-                      value={this.state.lastName}
-                    />
-                  </div>
-                  { errorMessages.lastName ? <p className="help is-danger">{errorMessages.lastName}</p> : '' }
-                </div>
-
-                <div>
-                  <button type="submit" className="button is-primary">
-                    <span className="icon">
-                      <FontAwesomeIcon icon={["fas", "check"]} />
-                    </span>
-                    <span>Save</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    )
+          <FormItem {...buttonItemLayout}>
+            <Button type="primary" htmlType="submit" className="login-form-button">
+              Submit
+            </Button>
+          </FormItem>
+        </Form>
+      </Card>
+    );
   }
 }
