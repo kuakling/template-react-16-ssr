@@ -86,7 +86,7 @@ schema.methods.generateJWT = function generateJWT() {
 //   };
 // };
 
-schema.plugin(uniqueValidator, { message: 'Error, expected {PATH} to be unique.' });
+schema.plugin(uniqueValidator, { message: 'Expected {PATH} to be unique.' });
 
 // export default mongoose.model("User", schema, "user"); //กรณีบังคับชื่อตารางเองให้ใส่ชื่อตารางในอากรูเมนต์หลังสุด
 export default mongoose.model("User", schema); //กรณีตั้งชื่อตารางอัตโนมัติ จะใช้ชื่อตารางตาชื่ออากรูเมนต์แรก เป็นอักษรพิมพ์เล็ก และเติม s ต่อท้าย

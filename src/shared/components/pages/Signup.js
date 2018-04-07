@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import { Card, Form, Input, Checkbox, Button, Modal, message, notification } from 'antd';
+import { Helmet } from "react-helmet";
+import { Spin, Card, Icon, Form, Input, Checkbox, Button, List, notification, Modal } from 'antd';
 import { graphql } from 'react-apollo';
-import sessionQuery from '../gql/queries/session.gql';
-import signUpMutation from '../gql/mutations/user/signup.gql';
+import sessionQuery from '../../gql/queries/session.gql';
+import signUpMutation from '../../gql/mutations/user/signup.gql';
 const FormItem = Form.Item;
 
 @graphql(sessionQuery)
@@ -39,6 +40,42 @@ export default class SignUp extends React.Component {
     notification.warning(args);
   };
 
+  openNotificationWhenFormErrors = () => {
+    const { errors } = this.state;
+    if (errors.length > 0) {
+      const notifyDescriptions = errors.map((error, i) => {
+        this.props.form.setFields({
+          [error.field]: {
+            value: this.props.form.getFieldValue(error.field),
+            errors: [new Error(error.message)]
+          }
+        })
+        return <div><span style={{ fontWeight: 'bold' }}>{error.field}</span><br />{error.message}</div>
+      })
+      notification.error({
+        message: 'Signup Fail!!',
+        description: <List
+          size="small"
+          bordered
+          dataSource={notifyDescriptions}
+          renderItem={item => (<List.Item>{item}</List.Item>)}
+        />
+      });
+    }
+  }
+
+  showLicense = e => {
+    e.preventDefault();
+    Modal.info({
+      title: '-:- License -:-',
+      content: (
+        <div>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. A iure neque quasi saepe maxime est nemo cum rerum voluptas! Sunt, consectetur! Doloribus iusto dolores itaque soluta ea amet molestias nam!
+        </div>
+      ),
+    });
+  }
+
   trySubmit = async (e, formValues) => {
     e.preventDefault();
     this.setState({ loading: true })
@@ -46,39 +83,40 @@ export default class SignUp extends React.Component {
       const { data: { signup } } = await this.props.mutate({
         variables: formValues,
       });
-      
+
       if (signup.errors) {
-        this.setState({ 
-          errors: signup.errors, 
-          loading: false 
+        this.setState({ errors: signup.errors });
+        signup.errors.map((error, i) => {
+          this.props.form.setFields({
+            [error.field]: {
+              value: this.props.form.getFieldValue(error.field),
+              errors: [new Error(error.message)]
+            }
+          })
         });
-        throw new Error('Form Input error');
-      }else{
+        throw new Error(JSON.stringify(signup.errors));
+      } else {
         this.props.form.resetFields();
-        message.success('Update success');
         this.openNotification(signup.user.confirmationToken)
         // this.props.history.push('/');
       }
     } catch (err) {
-      Modal.error({
-        title: 'Signup error',
-        // content: err.message,
-        content: this.state.errors.map(e => err.message).join("\n")
-      });
-      this.setState({ loading: false })
-      // Some kind of error was returned -- display it in the console
-      // eslint-disable-next-line no-console
-      console.error('GraphQL error: ', this.state.errors.map(e => err.message).join("\n"));
+      this.openNotificationWhenFormErrors();
+      console.error('Signup Fail: ', JSON.parse(err.message));
     }
     this.setState({ loading: false })
   }
 
   handleSubmit = (e) => {
     e.preventDefault();
-    this.props.form.validateFieldsAndScroll((err, values) => {
+    const { form } = this.props;
+    form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        // console.log('Received values of form: ', values);
         this.trySubmit(e, values);
+      } else {
+        const errors = [];
+        Object.entries(err).forEach(([key, value]) => errors.push(err[key].errors[0]));
+        this.setState({ errors }, () => this.openNotificationWhenFormErrors());
       }
     });
   }
@@ -86,7 +124,7 @@ export default class SignUp extends React.Component {
     const value = e.target.value;
     this.setState({ confirmDirty: this.state.confirmDirty || !!value });
   }
-  checkPassword = (rule, value, callback) => {
+  compareToFirstPassword = (rule, value, callback) => {
     const form = this.props.form;
     if (value && value !== form.getFieldValue('password')) {
       callback('Two passwords that you enter is inconsistent!');
@@ -94,7 +132,7 @@ export default class SignUp extends React.Component {
       callback();
     }
   }
-  checkConfirm = (rule, value, callback) => {
+  validateToNextPassword = (rule, value, callback) => {
     const form = this.props.form;
     if (value && this.state.confirmDirty) {
       form.validateFields(['confirm'], { force: true });
@@ -104,8 +142,8 @@ export default class SignUp extends React.Component {
 
   render() {
     const { data } = this.props;
-    if(data.loading) return <div>Loading...</div>;
-    if(data.session.ok) return <Redirect to="/" />;
+    if (data.loading) return <div>Loading...</div>;
+    if (data.session.ok) return <Redirect to="/" />;
 
     const { getFieldDecorator } = this.props.form;
 
@@ -133,9 +171,20 @@ export default class SignUp extends React.Component {
     };
 
     return (
-      <div className={`inside-center-middle signup-component`}>
-        <h1>Sign Up</h1>
-        <Card style={{ width: 500 }}>
+      <div className={`flex-full-page flex-center-page`}>
+        <Helmet>
+          <title>Sign Up</title>
+        </Helmet>
+        <h1 style={{ textAlign: 'center', color: '#001529' }}>
+          <Icon type="user-add" style={{
+            border: '#001529 1px solid',
+            padding: 10,
+            borderRadius: '50%',
+          }} />
+          <span> Sign Up a New Nser</span>
+        </h1>
+        <Card style={{ width: 500, boxShadow: '0 0 100px rgba(0,0,0,.08)' }}>
+        <Spin spinning={this.state.loading} >
           <Form onSubmit={this.handleSubmit}>
             <FormItem
               {...formItemLayout}
@@ -144,8 +193,9 @@ export default class SignUp extends React.Component {
             >
               {getFieldDecorator('username', {
                 rules: [{
-                  required: true, message: 'Please input your Username!',
+                  required: true, message: 'Please input your Username!'
                 }],
+                //initialValue: 'test',
               })(
                 <Input />
               )}
@@ -161,6 +211,7 @@ export default class SignUp extends React.Component {
                 }, {
                   required: true, message: 'Please input your E-mail!',
                 }],
+                //initialValue: 'test@test.com',
               })(
                 <Input />
               )}
@@ -174,8 +225,9 @@ export default class SignUp extends React.Component {
                 rules: [{
                   required: true, message: 'Please input your password!',
                 }, {
-                  validator: this.checkConfirm,
+                  validator: this.validateToNextPassword,
                 }],
+                //initialValue: 'test',
               })(
                 <Input type="password" />
               )}
@@ -189,8 +241,9 @@ export default class SignUp extends React.Component {
                 rules: [{
                   required: true, message: 'Please confirm your password!',
                 }, {
-                  validator: this.checkPassword,
+                  validator: this.compareToFirstPassword,
                 }],
+                //initialValue: 'test',
               })(
                 <Input type="password" onBlur={this.handleConfirmBlur} />
               )}
@@ -198,14 +251,24 @@ export default class SignUp extends React.Component {
             <FormItem {...tailFormItemLayout} style={{ marginBottom: 8 }}>
               {getFieldDecorator('agreement', {
                 valuePropName: 'checked',
+                rules: [{
+                  validator: (rule, value, callback) => {
+                    if (!value) {
+                      callback('Please check agrrement!');
+                    } else {
+                      callback();
+                    }
+                  },
+                }],
               })(
-                <Checkbox>I have read the <a href="">agreement</a></Checkbox>
+                <Checkbox>I have read the <a href="" onClick={this.showLicense}>agreement</a></Checkbox>
               )}
             </FormItem>
-            <FormItem {...tailFormItemLayout}>
-              <Button type="primary" htmlType="submit">Register</Button>
+            <FormItem {...tailFormItemLayout} style={{ marginBottom: 0 }}>
+              <Button type="primary" htmlType="submit" icon="check" loading={this.state.loading}>Register</Button>
             </FormItem>
           </Form>
+          </Spin>
         </Card>
       </div>
     );

@@ -1,6 +1,7 @@
 @import '~antd/dist/antd.css';
 
-html
+html, body
+  height initial
   min-height 100%
   display flex
 
@@ -8,7 +9,34 @@ body, #react-root, .flex-full-page
   display flex
   flex 1
 
+svg
+  width auto
+  height auto
+
+.flex-full-page
+  display flex
+  flex 1
+  
 .flex-center-page
   align-items center
   justify-content center
   flex-direction column
+
+.spin-360
+  animation-name rotate-360
+  animation-iteration-count infinite
+  animation-timing-function linear
+
+.animate-10s
+  animation-duration 10s
+
+@keyframes rotate-360 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.logo-spin
+  @extends .spin-360
+  @extends .animate-10s
+  height 44px
+  vertical-align top

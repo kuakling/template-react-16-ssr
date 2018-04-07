@@ -3,10 +3,12 @@ import { Redirect } from 'react-router';
 import { Link } from 'react-router-dom';
 import { graphql } from 'react-apollo';
 import { Helmet } from "react-helmet";
-import { Card, Form, Input, Icon, Button, Modal, message } from 'antd';
+import { Spin, Row, Form, Input, Icon, Button, List, notification, Modal } from 'antd';
 import config from '../../../../shared/core/config';
 import sessionQuery from '../../../gql/queries/session.gql';
 import loginMutation from '../../../gql/mutations/auth/login.gql';
+import style from './login.styl';
+import Logo from 'svg-react-loader?name=Logo!../../../assets/images/logo.svg';
 
 const FormItem = Form.Item;
 
@@ -31,6 +33,30 @@ export default class Login extends Component {
     confirmDirty: false,
   };
 
+  openNotificationWhenFormErrors = () => {
+    const { errors } = this.state;
+    if (errors.length > 0) {
+      const notifyDescriptions = errors.map((error, i) => {
+        this.props.form.setFields({
+          [error.field]: {
+            value: this.props.form.getFieldValue(error.field),
+            errors: [new Error(error.message)]
+          }
+        })
+        return <div><span style={{ fontWeight: 'bold' }}>{error.field}</span><br />{error.message}</div>
+      })
+      notification.error({
+        message: 'Signup Fail!!',
+        description: <List
+          size="small"
+          bordered
+          dataSource={notifyDescriptions}
+          renderItem={item => (<List.Item>{item}</List.Item>)}
+        />
+      });
+    }
+  }
+
   trySubmit = async (e, formValues) => {
     e.preventDefault();
     this.setState({ loading: true })
@@ -38,59 +64,70 @@ export default class Login extends Component {
       const { data: { login } } = await this.props.mutate({
         variables: formValues,
       });
-      
+
       if (login.errors) {
-        this.setState({ 
-          errors: login.errors, 
-          loading: false 
+        this.setState({ errors: login.errors });
+        login.errors.map((error, i) => {
+          this.props.form.setFields({
+            [error.field]: {
+              value: this.props.form.getFieldValue(error.field),
+              errors: [new Error(error.message)]
+            }
+          })
         });
-        throw new Error('Form Input error');
-      }else{
+        throw new Error(JSON.stringify(login.errors));
+      } else {
         if (!SERVER) {
           // window.localStorage.setItem(config.auth.storageName, login.jwt);
           document.cookie = `${config.auth.storageName}=${login.jwt}; path=/`;
         }
         this.props.form.resetFields();
-        message.success('Login success');
+        notification.success({
+          message: 'Login Success',
+          description: 'Welcome',
+        });
         this.props.history.push('/');
         return;
       }
     } catch (err) {
-      Modal.error({
-        title: 'Error',
-        // content: err.message,
-        content: this.state.errors.map(e => e.message).join("\n")
-      });
-      this.setState({ loading: false })
-      // Some kind of error was returned -- display it in the console
-      // eslint-disable-next-line no-console
-      console.error('GraphQL error: ', this.state.errors.map(e => e.message).join("\n"));
+      this.openNotificationWhenFormErrors();
+      console.error('Login Fail: ', JSON.parse(err.message));
     }
     this.setState({ loading: false })
   }
 
   handleSubmit = (e) => {
     e.preventDefault();
-    this.props.form.validateFieldsAndScroll((err, values) => {
+    const { form } = this.props;
+    form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        // console.log('Received values of form: ', values);
         this.trySubmit(e, values);
+      } else {
+        const errors = [];
+        Object.entries(err).forEach(([key, value]) => errors.push(err[key].errors[0]));
+        this.setState({ errors }, () => this.openNotificationWhenFormErrors());
       }
     });
   }
-  
+
 
   render() {
     const { data } = this.props;
-    if(data.loading) return <div>Loading...</div>;
-    if(data.session.ok) return <Redirect to="/" />;
-    
+    if (data.loading) return <div>Loading...</div>;
+    if (data.session.ok) return <Redirect to="/" />;
+
     const { getFieldDecorator } = this.props.form;
     return (
-      <div className={`login-component inside-center-middle`}>
-        <h1>Sign In</h1>
-        <Card style={{ width: 300 }}>
-          <Form onSubmit={this.handleSubmit} className="login-form">
+      <div>
+        <Helmet>
+          <title>Login</title>
+        </Helmet>
+        <h1 style={{ textAlign: 'center' }}>
+          <Logo className="logo-spin" />
+          <span style={{ color: '#61DAFB' }}>Universal React Fiber</span>
+        </h1>
+        <Spin spinning={this.state.loading} >
+          <Form onSubmit={this.handleSubmit} className={style.form}>
             <FormItem>
               {getFieldDecorator('identity', {
                 rules: [{ required: true, message: 'Please input your identity!' }],
@@ -105,15 +142,21 @@ export default class Login extends Component {
                 <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />} type="password" placeholder="Password" />
               )}
             </FormItem>
-            <FormItem>
-              <Button type="primary" htmlType="submit" className="login-form-button" style={{width: '100%'}}>
-                Sign in
-              </Button>
-              <Link to="/auth/forgot-password">Forgot password</Link>
-              Or <Link to="/signup">register now!</Link>
-            </FormItem>
+
+            <Row>
+              <Button type="primary" htmlType="submit" icon="login" loading={this.state.loading}>
+                Login
+            </Button>
+              <p>
+                <span><Link to="/auth/forgot-password">Forgot password</Link> </span>
+                <span><Link to="/signup">register now!</Link></span>
+              </p>
+            </Row>
           </Form>
-        </Card>
+        </Spin>
+        <Row style={{ marginTop: 15, textAlign: 'center' }}>
+          <Link to="/"><Button type="dashed" icon="home">Home</Button></Link>
+        </Row>
       </div>
     );
   }

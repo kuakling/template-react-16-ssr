@@ -16,14 +16,20 @@ export default {
     ]
   },
   module: {
-    rules: [{
-      test: /\.js$/,
-      use: 'babel-loader'
-    },
-    {
-      test: /\.(graphql|gql)$/,
-      exclude: /node_modules/,
-      loader: 'graphql-tag/loader',
-    }]
+    rules: [
+      {
+        test: /\.js$/,
+        use: 'babel-loader'
+      },
+      {
+           test: /\.inline\.svg$/,
+           use: ['svg-react-loader']
+      },
+      {
+        test: /\.(graphql|gql)$/,
+        exclude: /node_modules/,
+        loader: 'graphql-tag/loader',
+      }
+    ]
   }
 };

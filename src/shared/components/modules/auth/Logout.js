@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { graphql, withApollo } from 'react-apollo';
 import config from '../../../../shared/core/config';
+import { notification } from 'antd';
 import sessionQuery from '../../../gql/queries/session.gql';
 import logoutMutation from '../../../gql/mutations/auth/logout.gql';
 
@@ -27,13 +28,20 @@ export default class Logout extends Component {
           deleteCookie(config.auth.storageName)
         }
         this.props.client.resetStore();
-        // this.props.data.refetch();
+        notification.success({
+          message: 'Logout Success',
+          description: 'Current user is Guest',
+        });
         this.props.history.push('/');
         return;
       } else {
         throw new Error(logout.message || 'Logout fail');
       }
     } catch (err) {
+      notification.error({
+        message: 'Login Fail!!',
+        description: err.message,
+      });
       console.error('GraphQL error: ', err.message);
     }
   }

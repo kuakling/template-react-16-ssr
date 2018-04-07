@@ -18,30 +18,38 @@ export default merge(common, {
     libraryTarget: 'commonjs2'
   },
   module: {
-    rules: [{
-      test: /\.(styl|css)/,
-      exclude: [/style.global/, /node_modules/],
-      use: [{
-        loader: 'css-loader/locals',
-        options: {
-          modules: true,
-          localIdentName: '[name]__[local]--[hash:base64:5]'
-        }
-      }, {
-        loader: 'stylus-loader'
-      }]
-    },
-    {
-      test: /\global\.styl/,
-      use: [{
-        loader: 'css-loader/locals',
-        options: {
-          localIdentName: '[local]'
-        }
-      }, {
-        loader: 'stylus-loader'
-      }]
-    }]
+    rules: [
+      {
+        test: /\.(styl|css)/,
+        exclude: [/style.global/, /node_modules/],
+        use: [
+          {
+            loader: 'css-loader/locals',
+            options: {
+              modules: true,
+              localIdentName: '[local]--[hash:base64:5]'
+            }
+          },
+          {
+            loader: 'stylus-loader'
+          }
+        ]
+      },
+      {
+        test: /\global\.styl/,
+        use: [
+          {
+            loader: 'css-loader/locals',
+            options: {
+              localIdentName: '[local]'
+            }
+          },
+          {
+            loader: 'stylus-loader'
+          }
+        ]
+      }
+    ]
   },
   plugins: [
     new webpack.DefinePlugin({

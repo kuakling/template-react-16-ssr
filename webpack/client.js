@@ -20,34 +20,42 @@ export default merge(common, {
     chunkFilename: '[name].js'
   },
   module: {
-    rules: [{
-      test: /\.(styl|css)$/,
-      exclude: [/style.global/, /node_modules/],
-      use: ExtractCssChunks.extract({
-        use: [{
-          loader: 'css-loader',
-          options: {
-            modules: true,
-            localIdentName: '[name]__[local]--[hash:base64:5]'
-          }
-        }, {
-          loader: 'stylus-loader'
-        }]
-      })
-    },
-    {
-      test: /\global\.styl$/,
-      use: ExtractCssChunks.extract({
-        use: [{
-          loader: 'css-loader',
-          options: {
-            localIdentName: '[local]'
-          }
-        }, {
-          loader: 'stylus-loader'
-        }]
-      })
-    }]
+    rules: [
+      {
+        test: /\.(styl|css)$/,
+        exclude: [/style.global/, /node_modules/],
+        use: ExtractCssChunks.extract({
+          use: [
+            {
+              loader: 'css-loader',
+              options: {
+                modules: true,
+                localIdentName: '[local]--[hash:base64:5]'
+              }
+            },
+            {
+              loader: 'stylus-loader'
+            }
+          ]
+        })
+      },
+      {
+        test: /\global\.styl$/,
+        use: ExtractCssChunks.extract({
+          use: [
+            {
+              loader: 'css-loader',
+              options: {
+                localIdentName: '[local]'
+              }
+            },
+            {
+              loader: 'stylus-loader'
+            }
+          ]
+        })
+      }
+    ]
   },
   plugins: [
     new ExtractCssChunks({

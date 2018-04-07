@@ -38,7 +38,7 @@ export default ({ clientStats }) => async (req, res) => {
     }]
   };
 
-  
+
   const errorLink = onError(({ networkError, graphQLErrors }) => {
     if (graphQLErrors) {
       graphQLErrors.map(({ message, locations, path }) =>
@@ -63,9 +63,9 @@ export default ({ clientStats }) => async (req, res) => {
       headers: {
         ...headers,
         authorization: token ? `Bearer ${token}` : undefined,
-      } 
+      }
     }));
-  
+
     return forward(operation);
   });
   const httpLink = createHttpLink({
@@ -104,49 +104,61 @@ export default ({ clientStats }) => async (req, res) => {
     </ApolloProvider>
   );
 
-  const appString = ReactDOM.renderToStaticMarkup(app);
-  const chunkNames = flushChunkNames();
-  const { js, styles, cssHash } = flushChunks(clientStats, { chunkNames });
-  const helmet = Helmet.renderStatic();
-  const ejsParams = {
-    appString,
-    js,
-    styles,
-    cssHash,
-    helmet,
-    preloadedState: JSON.stringify({ ...preloadedState }),
-    apolloState: JSON.stringify({})
-  };
+  try {
+    const appString = ReactDOM.renderToStaticMarkup(app);
+    const chunkNames = flushChunkNames();
+    const { js, styles, cssHash } = flushChunks(clientStats, { chunkNames });
+    const helmet = Helmet.renderStatic();
+    const ejsParams = {
+      appString,
+      js,
+      styles,
+      cssHash,
+      helmet,
+      preloadedState: JSON.stringify({ ...preloadedState }),
+      apolloState: JSON.stringify({})
+    };
 
 
-  /*
-   * See https://reacttraining.com/react-router/web/guides/server-rendering for details
-   * on this configuration.
-   */
-  if (context.url) {
-    res.writeHead(301, {
-      Location: context.url
-    });
-    res.end();
-  } else {
-    renderToStringWithData(app).then((content) => {
-      res.status(200);
-      ejsParams.appString = content;
-      // ejsParams.preloadedState = JSON.stringify({ ...preloadedState })
-      ejsParams.apolloState = JSON.stringify(client.extract())
-      if (process.env.NODE_ENV === 'development') {
-        res.render('index', ejsParams);
-      } else {
-        res.render('index', ejsParams, function(err, html) {
-          if(err) res.send(err);
-          const minify = require('html-minifier').minify;
-          res.send(minify(html, {
-            // removeAttributeQuotes: true,
-            collapseWhitespace: true
-          }))
-        });
-      }
+    /*
+    * See https://reacttraining.com/react-router/web/guides/server-rendering for details
+    * on this configuration.
+    */
+    if (context.url) {
+      res.writeHead(301, {
+        Location: context.url
+      });
       res.end();
-    });
+    } else {
+      renderToStringWithData(app).then((content) => {
+        res.status(200);
+        ejsParams.appString = content;
+        // ejsParams.preloadedState = JSON.stringify({ ...preloadedState })
+        ejsParams.apolloState = JSON.stringify(client.extract())
+        if (process.env.NODE_ENV === 'development') {
+          res.render('index', ejsParams);
+        } else {
+          res.render('index', ejsParams, function (err, html) {
+            if (err) res.send(err);
+            const minify = require('html-minifier').minify;
+            res.send(minify(html, {
+              // removeAttributeQuotes: true,
+              collapseWhitespace: true
+            }))
+          });
+        }
+        res.end();
+      })
+        .catch(dataError => {
+          res.status(500);
+          res.send(dataError);
+          res.end();
+        });
+    }
+} catch (e) {
+    res.status(500);
+    console.error(e);
+    res.send(e.toString());
+    res.end();
   }
 };

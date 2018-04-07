@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import { graphql } from 'react-apollo';
 import { Helmet } from "react-helmet";
-import { Card, Form, Icon, Input, Button, Modal, message } from 'antd';
+import { Spin, Form, Icon, Input, Button, List, notification, Modal } from 'antd';
 import sessionQuery from '../../../gql/queries/session.gql';
 import updateProfileMutation from '../../../gql/mutations/user_profile/update.gql';
 
@@ -13,7 +13,7 @@ const formItems = [
     input: {
       type: 'text',
       placeholder: "First name",
-      name:"firstName",
+      name: "firstName",
     },
     rules: [{ required: true, message: 'Please input your first name!' }],
   },
@@ -21,9 +21,9 @@ const formItems = [
     label: "Last name",
     input: {
       placeholder: "Last name",
-      name:"lastName",
+      name: "lastName",
     },
-    rules: [{ required: true, message: 'Please input your last name!' }],
+    // rules: [{ required: true, message: 'Please input your last name!' }],
   },
 ];
 
@@ -43,19 +43,48 @@ const formItems = [
 @Form.create()
 export default class Profile extends Component {
 
-  constructor(props) {
-    super(props)
+  // constructor(props) {
+  //   super(props)
 
-    this.user = props.data.session.user;
-    const { id, username, email } = this.user;
-    const { firstName, lastName, bio } = this.user.profile;
-    this.state = {
-      firstName,
-      lastName,
-      bio,
-      loading: false,
-      errors: [],
-      propsLoaded: false,
+  //   this.user = props.data.session.user;
+  //   const { id, username, email } = this.user;
+  //   const { firstName, lastName } = this.user.profile;
+  //   this.state = {
+  //     firstName,
+  //     lastName,
+  //     loading: false,
+  //     errors: [],
+  //   }
+  // }
+
+  state = {
+    loading: false,
+    errors: [],
+    // firstName: this.props.data.session.user.profile.firstName,
+    // lastName: this.props.data.session.user.profile.lastName,
+  }
+
+  openNotificationWhenFormErrors = () => {
+    const { errors } = this.state;
+    if (errors.length > 0) {
+      const notifyDescriptions = errors.map((error, i) => {
+        this.props.form.setFields({
+          [error.field]: {
+            value: this.props.form.getFieldValue(error.field),
+            errors: [new Error(error.message)]
+          }
+        })
+        return <div><span style={{ fontWeight: 'bold' }}>{error.field}</span><br />{error.message}</div>
+      })
+      notification.error({
+        message: 'Signup Fail!!',
+        description: <List
+          size="small"
+          bordered
+          dataSource={notifyDescriptions}
+          renderItem={item => (<List.Item>{item}</List.Item>)}
+        />
+      });
     }
   }
 
@@ -67,11 +96,14 @@ export default class Profile extends Component {
 
   handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(this.state);
-    this.props.form.validateFields((err, values) => {
+    const { form } = this.props;
+    form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        // console.log('Received values of form: ', values);
-        this.trySubmit(e)
+        this.trySubmit(e, values);
+      } else {
+        const errors = [];
+        Object.entries(err).forEach(([key, value]) => errors.push(err[key].errors[0]));
+        this.setState({ errors }, () => this.openNotificationWhenFormErrors());
       }
     });
   }
@@ -86,24 +118,27 @@ export default class Profile extends Component {
           ...this.state
         },
       });
-      
+
       if (userProfileUpdate.errors) {
-        this.setState({ 
-          errors: userProfileUpdate.errors, 
-          loading: false 
+        this.setState({ errors: userProfileUpdate.errors });
+        userProfileUpdate.errors.map((error, i) => {
+          this.props.form.setFields({
+            [error.field]: {
+              value: this.props.form.getFieldValue(error.field),
+              errors: [new Error(error.message)]
+            }
+          })
         });
-        return;
+        throw new Error(JSON.stringify(userProfileUpdate.errors));
+      } else {
+        notification.success({
+          message: 'Update Profile Success',
+        });
       }
-      message.success('Update success');
     } catch (err) {
-      Modal.error({
-        title: 'Update error',
-        content: err.message,
-      });
-      this.setState({ loading: false })
-      // Some kind of error was returned -- display it in the console
-      // eslint-disable-next-line no-console
-      console.error('GraphQL error: ', e.message);
+      console.log(err.message);
+      this.openNotificationWhenFormErrors();
+      console.error('Update profile Fail: ', JSON.parse(err.message));
     }
     this.setState({ loading: false })
   }
@@ -118,34 +153,36 @@ export default class Profile extends Component {
     const buttonItemLayout = formLayout === 'horizontal' ? {
       wrapperCol: { span: 20, offset: 4 },
     } : null;
+    const { profile } = this.props.data.session.user;
 
     return (
-      <Card
-        hoverable
-      >
-        <Form onSubmit={this.handleSubmit} layout={'horizontal'} className={`profile-form`}>
-          {formItems.map(item => (
-            <FormItem
-              key={`form-item-${item.input.name}`}
-              label={item.label}
-              {...formItemLayout}
-            >
-              {getFieldDecorator(item.input.name, {
-                rules: item.rules || [],
-                initialValue: this.state[item.input.name],
-              })(
-                <Input {...item.input} onChange={this.handleChange} />
-              )}
-            </FormItem>
-          ))}
+      <Fragment>
+        <h2>Update your profile</h2>
+        <Spin spinning={this.state.loading} >
+          <Form onSubmit={this.handleSubmit} layout={'horizontal'}>
+            {formItems.map(item => (
+              <FormItem
+                key={`form-item-${item.input.name}`}
+                label={item.label}
+                {...formItemLayout}
+              >
+                {getFieldDecorator(item.input.name, {
+                  rules: item.rules || [],
+                  initialValue: profile[item.input.name],
+                })(
+                  <Input {...item.input} onChange={this.handleChange} />
+                )}
+              </FormItem>
+            ))}
 
-          <FormItem {...buttonItemLayout}>
-            <Button type="primary" htmlType="submit" className="login-form-button">
-              Submit
+            <FormItem {...buttonItemLayout}>
+              <Button type="primary" htmlType="submit" icon="check" loading={this.state.loading}>
+                Submit
             </Button>
-          </FormItem>
-        </Form>
-      </Card>
+            </FormItem>
+          </Form>
+        </Spin>
+      </Fragment>
     );
   }
 }
