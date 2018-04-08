@@ -1,6 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import { Switch, Route } from 'react-router-dom';
 import { Helmet } from "react-helmet";
+import nprogress from 'nprogress';
 
 import './style.global.styl';
 
@@ -31,4 +32,14 @@ export default class App extends Component {
       </Fragment>
     )
   }
+
+  componentWillUpdate = (nextProps, nextState) => {
+    nprogress.start()
+  }
+
+  componentDidUpdate = (prevProps, prevState) => {
+    nprogress.done()
+  }
+  
+  
 }

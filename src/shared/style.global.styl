@@ -1,4 +1,17 @@
 @import '~antd/dist/antd.css';
+@import '~nprogress/nprogress.css';
+
+progress-color = #bada55
+
+#nprogress 
+  .bar
+    background progress-color
+  .peg
+    box-shadow 0 0 10px progress-color, 0 0 5px progress-color
+  .spinner-icon 
+    border-top-color progress-color
+    border-left-color progress-color
+
 
 html, body
   height initial
