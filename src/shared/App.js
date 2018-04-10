@@ -5,7 +5,8 @@ import nprogress from 'nprogress';
 
 import './style.global.styl';
 
-import Pages from './components/pages';
+import Pages, { pageReg } from './components/pages';
+import NotFound from './components/pages/NotFound';
 import AuthIndex from './components/modules/auth/AuthIndex';
 import UserIndex from './components/modules/user/UserIndex';
 
@@ -18,6 +19,7 @@ import UserIndex from './components/modules/user/UserIndex';
 export default class App extends Component {
 
   render() {
+    // console.log(pageReg)
     return (
       <Fragment>
         <Helmet
@@ -27,7 +29,8 @@ export default class App extends Component {
         <Switch>
           <Route path='/auth' component={AuthIndex} />
           <Route path='/user' component={UserIndex} />
-          <Route path='/' component={Pages} />
+          <Route path={`(${pageReg})`} render={(props) => (<Pages />)} />
+          <Route component={NotFound} />
         </Switch>
       </Fragment>
     )
@@ -41,5 +44,16 @@ export default class App extends Component {
     nprogress.done()
   }
   
+  componentDidMount = () => {
+    const ele = document.getElementById('loading-indicator')
+      if(ele){
+        // fade out
+        ele.classList.add('available')
+        setTimeout(() => {
+          // remove from DOM
+          ele.outerHTML = ''
+        }, 1000)
+      }
+  }
   
 }
