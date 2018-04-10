@@ -1,5 +1,5 @@
-@import '~antd/dist/antd.css';
-@import '~nprogress/nprogress.css';
+@import '~antd/dist/antd.css'
+@import '~nprogress/nprogress.css'
 
 progress-color = #bada55
 
@@ -44,8 +44,8 @@ svg
   animation-duration 10s
 
 @keyframes rotate-360 {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0deg) }
+  to { transform: rotate(360deg) }
 }
 
 .logo-spin
@@ -53,3 +53,37 @@ svg
   @extends .animate-10s
   height 44px
   vertical-align top
+
+
+
+
+.page-main 
+  position relative
+
+.page-main-inner 
+  position absolute
+  top 0
+  left 0
+  width 100%
+
+
+.page-slide-up-enter 
+  transform translateY(100%)
+  opacity 0
+
+.page-slide-up-enter-active 
+  transition transform 300ms ease-in-out, opacity 300ms ease-in-out
+  transform translateX(0%)
+  opacity 1
+
+.page-slide-up-exit 
+  transition transform 300ms ease-in-out, opacity 300ms ease-in-out
+  transform translateY(0%)
+  opacity 1
+
+.page-slide-up-exit-active 
+  transform translateY(-100%)
+  opacity 0
+
+.page-slide-up-enter-done 
+  position initial

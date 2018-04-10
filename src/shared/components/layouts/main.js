@@ -11,7 +11,7 @@ const { Header, Footer, Content } = Layout;
 export default (props) => {
   return (
     <Layout className="layout">
-      <Header>
+      <Header style={{zIndex: 99}}>
         <div className={style.logo}>
           <Logo className="logo-spin" /> Universal React Fiber
         </div>

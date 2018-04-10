@@ -1,5 +1,6 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import MainLayout from '../layouts/main';
 
 import Home from './Home';
@@ -44,16 +45,23 @@ export const pageReg = fncPageReg();
 
 
 
-export default () => {
+export default (props) => {
+  const timeout = { enter: 300, exit: 200 }
   return (
     <MainLayout>
-      <Switch>
-        {
-          pageRoutes.map(item => (
-            <Route key={item.path} {...item} />
-          ))
-        }
-      </Switch>
+      <TransitionGroup component="main" className="page-main">
+        <CSSTransition key={props.location.key} timeout={timeout} classNames="page-slide-up" appear>
+          <section className="page-main-inner">
+            <Switch location={props.location}>
+              {
+                pageRoutes.map(item => (
+                  <Route key={item.path} {...item} />
+                ))
+              }
+            </Switch>
+          </section>
+        </CSSTransition>
+      </TransitionGroup>
     </MainLayout>
   )
 }

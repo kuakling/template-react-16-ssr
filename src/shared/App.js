@@ -29,7 +29,7 @@ export default class App extends Component {
         <Switch>
           <Route path='/auth' component={AuthIndex} />
           <Route path='/user' component={UserIndex} />
-          <Route path={`(${pageReg})`} render={(props) => (<Pages />)} />
+          <Route path={`(${pageReg})`} render={(props) => (<Pages { ...props } />)} />
           <Route component={NotFound} />
         </Switch>
       </Fragment>
@@ -51,8 +51,8 @@ export default class App extends Component {
         ele.classList.add('available')
         setTimeout(() => {
           // remove from DOM
-          ele.outerHTML = ''
-        }, 1000)
+          // ele.outerHTML = ''
+        }, 5000)
       }
   }
   
